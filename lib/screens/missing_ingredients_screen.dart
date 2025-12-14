@@ -61,9 +61,6 @@ class _MissingIngredientsScreenState extends State<MissingIngredientsScreen> {
 
     if (userId == null) {
       return Scaffold(
-        appBar: AppBar(
-          title: const Text('Missing Ingredients'),
-        ),
         body: const Center(
           child: Text('Please log in to view your shopping list.'),
         ),
@@ -71,9 +68,6 @@ class _MissingIngredientsScreenState extends State<MissingIngredientsScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Missing Ingredients'),
-      ),
       body: StreamBuilder<List<ShoppingItemModel>>(
         stream: _firestoreService.getShoppingListStream(userId),
         builder: (context, snapshot) {
