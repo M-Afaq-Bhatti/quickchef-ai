@@ -1,6 +1,6 @@
 # 🍽️ QuickChef AI
 
-**QuickChef AI** is a professional, AI-powered **Flutter Web application** that helps users turn the ingredients they already have into practical, healthy, and time-efficient meals. The project focuses on **clean architecture, real-world AI usage, and academic-grade software design**, making it suitable for **final-year projects, internships, and technical evaluations**.
+**QuickChef AI** is a professional, AI-powered **Flutter Web application** that helps users turn the ingredients they already have into practical, healthy, and time-efficient meals. The project focuses on **clean architecture, real-world AI usage, and academic-grade software design**.
 
 ---
 
