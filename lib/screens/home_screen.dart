@@ -8,6 +8,7 @@ import '../widgets/custom_button.dart';
 import 'recipe_results_screen.dart';
 import 'saved_recipes_screen.dart';
 import 'profile_screen.dart';
+import 'missing_ingredients_screen.dart';
 
 /// Home screen - Main interaction point for ingredient input
 class HomeScreen extends StatefulWidget {
@@ -85,7 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _buildHomeContent()
           : _currentNavIndex == 1
               ? const SavedRecipesScreen()
-              : const ProfileScreen(),
+              : _currentNavIndex == 2
+                  ? const ProfileScreen()
+                  : const MissingIngredientsScreen(),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
@@ -97,7 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ? AppConstants.appName
             : _currentNavIndex == 1
                 ? 'Saved Recipes'
-                : 'Profile',
+                : _currentNavIndex == 2
+                    ? 'Profile'
+                    : 'Missing Ingredients',
         style: AppTextStyles.h4,
       ),
       centerTitle: true,
@@ -136,10 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
               isLoading: _isGenerating,
               icon: Icons.auto_awesome,
             ),
-            const SizedBox(height: 40),
-
-            // Quick categories
-            _buildQuickCategories(),
           ],
         ),
       ),
@@ -292,79 +293,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickCategories() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Quick Categories',
-          style: AppTextStyles.h5.copyWith(
-            color: AppColors.primaryGreen,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.5,
-          children: AppConstants.recipeCategories.map((category) {
-            return _buildCategoryCard(category);
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCard(String category) {
-    return Card(
-      elevation: AppConstants.cardElevation,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-      ),
-      child: InkWell(
-        onTap: () {
-          // Pre-fill suggestions based on category
-          _showCategorySuggestion(category);
-        },
-        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                category.split(' ')[0],
-                style: const TextStyle(fontSize: 32),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                category.substring(category.indexOf(' ') + 1),
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showCategorySuggestion(String category) {
-    final suggestions = {
-      '🕐 Quick Meals': 'pasta, eggs, bread, cheese',
-      '💚 Healthy Options': 'chicken breast, broccoli, quinoa, spinach',
-      '💰 Budget Recipes': 'rice, beans, potatoes, onions',
-      '⭐ Popular Choices': 'chicken, tomatoes, garlic, olive oil',
-    };
-
-    _ingredientsController.text = suggestions[category] ?? '';
-  }
-
   Widget _buildBottomNav() {
     return BottomNavigationBar(
       currentIndex: _currentNavIndex,
@@ -375,6 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       selectedItemColor: AppColors.primaryGreen,
       unselectedItemColor: AppColors.textSecondary,
+      type: BottomNavigationBarType.fixed,
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home),
@@ -387,6 +316,10 @@ class _HomeScreenState extends State<HomeScreen> {
         BottomNavigationBarItem(
           icon: Icon(Icons.person),
           label: 'Profile',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list),
+          label: 'Missing',
         ),
       ],
     );

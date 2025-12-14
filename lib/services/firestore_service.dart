@@ -266,12 +266,16 @@ class FirestoreService {
       final snapshot = await _firestore
           .collection(AppConstants.firestoreShoppingList)
           .where('userId', isEqualTo: userId)
-          .orderBy('addedAt', descending: true)
           .get();
 
-      return snapshot.docs
+      final items = snapshot.docs
           .map((doc) => ShoppingItemModel.fromFirestore(doc))
           .toList();
+
+      // Sort in memory by addedAt (newest first)
+      items.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+
+      return items;
     } catch (e) {
       throw 'Failed to fetch shopping list: $e';
     }
@@ -284,15 +288,35 @@ class FirestoreService {
           .collection(AppConstants.firestoreShoppingList)
           .where('userId', isEqualTo: userId)
           .where('isPurchased', isEqualTo: false)
-          .orderBy('addedAt', descending: true)
           .get();
 
-      return snapshot.docs
+      final items = snapshot.docs
           .map((doc) => ShoppingItemModel.fromFirestore(doc))
           .toList();
+
+      // Sort in memory by addedAt (newest first)
+      items.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+
+      return items;
     } catch (e) {
       throw 'Failed to fetch unpurchased items: $e';
     }
+  }
+
+  /// Stream shopping list items for real-time updates
+  Stream<List<ShoppingItemModel>> getShoppingListStream(String userId) {
+    return _firestore
+        .collection(AppConstants.firestoreShoppingList)
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+      final items = snapshot.docs
+          .map((doc) => ShoppingItemModel.fromFirestore(doc))
+          .toList();
+      // Sort by addedAt in memory (newest first)
+      items.sort((a, b) => b.addedAt.compareTo(a.addedAt));
+      return items;
+    });
   }
 
   /// Update shopping item
@@ -446,12 +470,33 @@ class FirestoreService {
     }
   }
 
-  /// Add multiple items to shopping list
+  /// Add multiple items to shopping list (avoiding duplicates)
   Future<void> addMultipleShoppingItems(List<ShoppingItemModel> items) async {
     try {
+      if (items.isEmpty) return;
+
+      // Get existing items for this user
+      final existingSnapshot = await _firestore
+          .collection(AppConstants.firestoreShoppingList)
+          .where('userId', isEqualTo: items.first.userId)
+          .get();
+
+      final existingItemNames = existingSnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return (data['itemName'] as String).toLowerCase();
+      }).toSet();
+
+      // Filter out duplicates
+      final newItems = items
+          .where((item) =>
+              !existingItemNames.contains(item.itemName.toLowerCase()))
+          .toList();
+
+      if (newItems.isEmpty) return;
+
       final batch = _firestore.batch();
 
-      for (final item in items) {
+      for (final item in newItems) {
         final docRef =
             _firestore.collection(AppConstants.firestoreShoppingList).doc();
         batch.set(docRef, item.toFirestore());
